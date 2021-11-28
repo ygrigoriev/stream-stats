@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth\Oauth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +26,11 @@ abstract class BaseController extends Controller
     public function callback()
     {
         $currentUser = $this->request->user();
-        $serviceUser = $this->getProvider()->user();
+        try {
+            $serviceUser = $this->getProvider()->user();
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            return redirect()->route('noaccess');
+        }
         $user = $this->persistUser($serviceUser);
         if (!$currentUser) {
             $this->auth->guard()->login($user, true);
